@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Omar Even Odd Bot V4</title>
+  <style>
+    body{font-family:Arial,sans-serif;background:#111827;color:#fff;margin:0;padding:24px}
+    .card{max-width:560px;margin:30px auto;background:#1f2937;border-radius:18px;padding:24px;box-shadow:0 10px 30px #0005}
+    h1{margin-top:0}.status{padding:12px;border-radius:10px;background:#374151;margin:18px 0}
+    button{width:100%;padding:14px;border:0;border-radius:10px;font-size:16px;font-weight:700;cursor:pointer;margin-top:10px}
+    #connect{background:#22c55e;color:#06120a}.secondary{background:#4b5563;color:#fff}
+    .hidden{display:none}.row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #374151}
+    small{color:#9ca3af}.warning{font-size:13px;color:#fbbf24;line-height:1.5}
+  </style>
+</head>
+<body>
+<div class="card">
+  <h1>Omar Even Odd Bot V4</h1>
+  <small>Deriv OAuth connection</small>
+
+  <div id="status" class="status">Not connected</div>
+
+  <button id="connect">Connect with Deriv</button>
+  <button id="logout" class="secondary hidden">Disconnect</button>
+
+  <div id="account" class="hidden">
+    <div class="row"><span>Account</span><b id="loginid">—</b></div>
+    <div class="row"><span>Balance</span><b id="balance">—</b></div>
+    <div class="row"><span>Currency</span><b id="currency">—</b></div>
+  </div>
+
+  <p class="warning">
+    This version only tests OAuth authorization and account connection.
+    It does not place trades automatically.
+  </p>
+</div>
+
+<script>
+const APP_ID = "34eUE5W4X4BBYRnAAoXWs";
+const REDIRECT_URI = "https://hassanokoth04-bit.github.io/Deriv-even-odd-bot/";
+const WS_URL = `wss://ws.derivws.com/websockets/v3?app_id=${APP_ID}`;
+
+let ws = null;
+let authToken = null;
+
+const statusEl = document.getElementById("status");
+const connectBtn = document.getElementById("connect");
+const logoutBtn = document.getElementById("logout");
+const accountEl = document.getElementById("account");
+
+function setStatus(text) {
+  statusEl.textContent = text;
+}
+
+function startOAuth() {
+  const url =
+    "https://oauth.deriv.com/oauth2/authorize" +
+    `?app_id=${encodeURIComponent(APP_ID)}` +
+    `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`;
+  window.location.href = url;
+}
+
+function readOAuthResult() {
+  const params = new URLSearchParams(window.location.search);
+
+  // Deriv OAuth commonly returns token1 for the first authorized account.
+  // Keep support for a token parameter if returned by the authorization flow.
+  const token = params.get("token1") || params.get("token");
+
+  if (!token) return false;
+
+  authToken = token;
+  history.replaceState({}, document.title, REDIRECT_URI);
+  connectWebSocket();
+  return true;
+}
+
+function send(data) {
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(data));
+  }
+}
+
+function connectWebSocket() {
+  setStatus("Connecting to Deriv…");
+  ws = new WebSocket(WS_URL);
+
+  ws.onopen = () => {
+    setStatus("Authorizing…");
+    send({ authorize: authToken });
+  };
+
+  ws.onmessage = (event) => {
+    let data;
+    try { data = JSON.parse(event.data); } catch { return; }
+
+    if (data.error) {
+      setStatus("Connection error: " + data.error.message);
+      return;
+    }
+
+    if (data.msg_type === "authorize") {
+      const a = data.authorize;
+      document.getElementById("loginid").textContent = a.loginid || "—";
+      document.getElementById("currency").textContent = a.currency || "—";
+      document.getElementById("balance").textContent =
+        a.balance !== undefined ? `${a.balance} ${a.currency || ""}` : "—";
+
+      setStatus("Connected to Deriv ✓");
+      connectBtn.classList.add("hidden");
+      logoutBtn.classList.remove("hidden");
+      accountEl.classList.remove("hidden");
+    }
+  };
+
+  ws.onerror = () => setStatus("WebSocket connection failed.");
+  ws.onclose = () => {
+    if (authToken) setStatus("Disconnected.");
+  };
+}
+
+function disconnect() {
+  authToken = null;
+  if (ws) ws.close();
+  ws = null;
+  connectBtn.classList.remove("hidden");
+  logoutBtn.classList.add("hidden");
+  accountEl.classList.add("hidden");
+  setStatus("Not connected");
+}
+
+connectBtn.addEventListener("click", startOAuth);
+logoutBtn.addEventListener("click", disconnect);
+
+readOAuthResult();
+</script>
+</body>
+</html>
