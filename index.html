@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deriv Even/Odd Bot V6</title>
+
+<style>
+body{
+  font-family:Arial,sans-serif;
+  background:#f4f6f8;
+  margin:0;
+  padding:20px;
+  color:#17202a
+}
+.card{
+  max-width:520px;
+  margin:auto;
+  background:#fff;
+  border-radius:16px;
+  padding:22px;
+  box-shadow:0 4px 18px #0001
+}
+h1{
+  margin:0 0 8px;
+  font-size:24px
+}
+.muted{
+  color:#667;
+  font-size:14px;
+  line-height:1.45
+}
+label{
+  display:block;
+  font-weight:700;
+  margin-top:16px
+}
+input{
+  width:100%;
+  box-sizing:border-box;
+  padding:13px;
+  margin-top:7px;
+  border:1px solid #ccd3da;
+  border-radius:9px;
+  font-size:15px
+}
+button{
+  width:100%;
+  padding:14px;
+  margin-top:12px;
+  border:0;
+  border-radius:10px;
+  font-size:16px;
+  font-weight:700;
+  cursor:pointer
+}
+#connect{
+  background:#18a558;
+  color:#fff
+}
+button:disabled{
+  opacity:.45;
+  cursor:not-allowed
+}
+.status{
+  padding:12px;
+  border-radius:10px;
+  background:#eef1f4;
+  margin:16px 0;
+  word-break:break-word
+}
+.ok{
+  background:#e8f7ee
+}
+.bad{
+  background:#fdeaea
+}
+pre{
+  background:#111;
+  color:#eee;
+  border-radius:10px;
+  padding:12px;
+  min-height:90px;
+  max-height:300px;
+  overflow:auto;
+  white-space:pre-wrap;
+  word-break:break-word;
+  font-size:12px
+}
+.warning{
+  margin-top:14px;
+  padding:11px;
+  border-radius:9px;
+  background:#fff4d6;
+  font-size:13px
+}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+
+<h1>Deriv Even/Odd Bot V6</h1>
+
+<p class="muted">
+Connect securely through the bot's Render backend.
+Your API token is sent only to the backend for authorization.
+</p>
+
+<label for="token">Deriv API Token</label>
+
+<input
+  id="token"
+  type="password"
+  autocomplete="off"
+  placeholder="Paste your Deriv API token here"
+>
+
+<button id="connect">
+Authorize & Test Connection
+</button>
+
+<div id="status" class="status">
+Not connected
+</div>
+
+<h3>Connection log</h3>
+
+<pre id="log"></pre>
+
+<div class="warning">
+<strong>Security:</strong>
+Never put your API token inside GitHub files.
+</div>
+
+</div>
+
+<script>
+
+const BACKEND_URL =
+  "https://deriv-even-odd-bot.onrender.com";
+
+const $ = id => document.getElementById(id);
+
+function log(message){
+
+  const time =
+    new Date().toLocaleTimeString();
+
+  $("log").textContent +=
+    "[" + time + "] " + message + "\n";
+
+  $("log").scrollTop =
+    $("log").scrollHeight;
+}
+
+function setStatus(message, good=false){
+
+  $("status").textContent = message;
+
+  $("status").className =
+    "status " + (good ? "ok" : "bad");
+}
+
+async function connect(){
+
+  const token =
+    $("token").value.trim();
+
+  if(!token){
+
+    setStatus("Enter your Deriv API token first.");
+
+    log("No token entered.");
+
+    return;
+  }
+
+  $("connect").disabled = true;
+
+  setStatus("Connecting to Deriv...");
+
+  log("Connecting through Render backend...");
+  log(BACKEND_URL);
+
+  try{
+
+    const response =
+      await fetch(BACKEND_URL + "/connect", {
+
+        method:"POST",
+
+        headers:{
+          "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+          token:token
+        })
+
+      });
+
+    const data =
+      await response.json();
+
+    if(!response.ok){
+
+      setStatus(
+        "Connection failed: " +
+        (data.error || "Unknown error")
+      );
+
+      log(
+        "API ERROR: " +
+        (data.error || "Unknown error")
+      );
+
+      if(data.code){
+
+        log(
+          "ERROR CODE: " +
+          data.code
+        );
+      }
+
+      $("connect").disabled = false;
+
+      return;
+    }
+
+    if(data.success){
+
+      setStatus(
+        "CONNECTED — " +
+        (data.loginid || "Account"),
+        true
+      );
+
+      log("==============================");
+      log("AUTHORIZATION SUCCESSFUL");
+      log(
+        "Account: " +
+        (data.loginid || "unknown")
+      );
+      log(
+        "Currency: " +
+        (data.currency || "unknown")
+      );
+      log(
+        "Balance: " +
+        (data.balance ?? "unknown")
+      );
+      log("==============================");
+
+      $("connect").disabled = true;
+
+      return;
+    }
+
+    setStatus("Unexpected response from backend.");
+
+    log(
+      JSON.stringify(data)
+    );
+
+    $("connect").disabled = false;
+
+  }catch(error){
+
+    setStatus(
+      "Could not reach Render backend."
+    );
+
+    log(
+      "NETWORK ERROR: " +
+      (error.message || error)
+    );
+
+    $("connect").disabled = false;
+  }
+}
+
+$("connect").addEventListener(
+  "click",
+  connect
+);
+
+log("Ready.");
+log(
+  "Enter your Deriv token and tap Authorize & Test Connection."
+);
+
+</script>
+
+</body>
+  </html>
