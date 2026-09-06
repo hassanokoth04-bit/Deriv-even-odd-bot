@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>OmarTrader Live Digit Analyzer</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #07101d;
+    color: #ffffff;
+}
+
+.container {
+    max-width: 900px;
+    margin: auto;
+    padding: 20px;
+}
+
+.header {
+    background: #111c2e;
+    border: 1px solid #293a57;
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.subtitle {
+    color: #8d9bb5;
+    margin-top: 7px;
+    font-size: 13px;
+}
+
+.controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 18px;
+}
+
+select,
+button {
+    background: #192740;
+    color: white;
+    border: 1px solid #3a4b68;
+    border-radius: 8px;
+    padding: 11px 14px;
+    font-size: 14px;
+}
+
+button {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background: #263957;
+}
+
+.status {
+    margin-top: 14px;
+    color: #42e09a;
+    font-size: 13px;
+}
+
+.status-dot {
+    display: inline-block;
+    width: 9px;
+    height: 9px;
+    background: #777;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 12px;
+}
+
+.card {
+    background: #111c2e;
+    border: 1px solid #293a57;
+    border-radius: 14px;
+    padding: 18px;
+}
+
+.label {
+    color: #8d9bb5;
+    font-size: 11px;
+    text-transform: uppercase;
+}
+
+.value {
+    font-size: 30px;
+    font-weight: bold;
+    margin-top: 8px;
+}
+
+.panel {
+    background: #111c2e;
+    border: 1px solid #293a57;
+    border-radius: 14px;
+    padding: 18px;
+    margin-top: 15px;
+}
+
+.panel-title {
+    font-size: 17px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+.digits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.digit {
+    width: 34px;
+    height: 34px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #202e48;
+    border-radius: 7px;
+    font-weight: bold;
+}
+
+.message {
+    color: #8d9bb5;
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+@media(max-width:600px) {
+
+    .container {
+        padding: 12px;
+    }
+
+    h1 {
+        font-size: 21px;
+    }
+
+    .value {
+        font-size: 25px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="header">
+
+        <h1>
+            OmarTrader Live Digit Analyzer
+        </h1>
+
+        <div class="subtitle">
+            Live Deriv tick analysis • Matches & Differs
+        </div>
+
+        <div class="controls">
+
+            <select id="market">
+                <option>
+                    Discovering markets...
+                </option>
+            </select>
+
+            <button id="refresh">
+                Refresh Markets
+            </button>
+
+        </div>
+
+        <div class="status">
+
+            <span
+                id="statusDot"
+                class="status-dot">
+            </span>
+
+            <span id="status">
+                Connecting to Deriv...
+            </span>
+
+        </div>
+
+    </div>
+
+
+    <div class="card-grid">
+
+        <div class="card">
+
+            <div class="label">
+                Current Digit
+            </div>
+
+            <div
+                id="currentDigit"
+                class="value">
+                --
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="label">
+                Ticks Received
+            </div>
+
+            <div
+                id="tickCount"
+                class="value">
+                0
+            </div>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="label">
+                Market
+            </div>
+
+            <div
+                id="marketName"
+                class="value"
+                style="font-size:20px;">
+                --
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-title">
+            Live Last Digits
+        </div>
+
+        <div
+            id="digits"
+            class="digits">
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-title">
+            Connection
+        </div>
+
+        <div
+            id="connectionInfo"
+            class="message">
+            Waiting for Deriv...
+        </div>
+
+    </div>
+
+
+    <div class="panel">
+
+        <div class="panel-title">
+            Next Step
+        </div>
+
+        <div class="message">
+
+            Once live digits are working, we will add:
+
+            <br><br>
+
+            • MATCH digit analysis<br>
+            • DIFFERS digit analysis<br>
+            • 10 / 20 / 50 / 100 tick statistics<br>
+            • Digit frequency<br>
+            • Repeated digit detection<br>
+            • Streak analysis<br>
+            • Market scoring<br>
+            • Automatic BEST MARKET selection<br>
+            • MATCH / DIFFERS / WAIT signal
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/*
+========================================
+DERIV WEBSOCKET
+========================================
+*/
+
+const DERIV_URL =
+    "wss://ws.derivws.com/websockets/v3?app_id=1089";
+
+
+let socket = null;
+
+let availableMarkets = {};
+
+let tickData = {};
+
+let selectedMarket = "";
+
+
+/*
+========================================
+STATUS
+========================================
+*/
+
+function setStatus(message, connected) {
+
+    document.getElementById("status").textContent =
+        message;
+
+    document.getElementById("statusDot").style.background =
+        connected
+            ? "#42e09a"
+            : "#ff6478";
+
+}
+
+
+/*
+========================================
+GET LAST DIGIT
+========================================
+*/
+
+function getLastDigit(quote, pipSize) {
+
+    const number = Number(quote);
+
+    if (!Number.isFinite(number)) {
+
+        return null;
+
+    }
+
+    const decimals =
+        Number.isInteger(pipSize)
+            ? pipSize
+            : 2;
+
+    const formatted =
+        number.toFixed(decimals);
+
+    const numbers =
+        formatted.replace(/\D/g, "");
+
+    if (!numbers) {
+
+        return null;
+
+    }
+
+    return Number(
+        numbers.charAt(numbers.length - 1)
+    );
+
+}
+
+
+/*
+========================================
+SHOW DIGIT
+========================================
+*/
+
+function showDigit(digit) {
+
+    document.getElementById(
+        "currentDigit"
+    ).textContent = digit;
+
+}
+
+
+/*
+========================================
+DISPLAY RECENT DIGITS
+========================================
+*/
+
+function displayDigits() {
+
+    const container =
+        document.getElementById("digits");
+
+    const data =
+        tickData[selectedMarket] || [];
+
+    const recent =
+        data.slice(-50);
+
+    container.innerHTML =
+        recent
+            .map(
+                digit =>
+                `<span class="digit">${digit}</span>`
+            )
+            .join("");
+
+}
+
+
+/*
+========================================
+DISCOVER MARKETS
+========================================
+*/
+
+function discoverMarkets() {
+
+    if (socket) {
+
+        try {
+
+            socket.close();
+
+        } catch (e) {}
+
+    }
+
+
+    availableMarkets = {};
+
+    tickData = {};
+
+    selectedMarket = "";
+
+
+    document.getElementById(
+        "market"
+    ).innerHTML =
+        "<option>Finding valid markets...</option>";
+
+
+    setStatus(
+        "Discovering available Deriv markets...",
+        false
+    );
+
+
+    socket =
+        new WebSocket(DERIV_URL);
+
+
+    /*
+    ========================================
+    CONNECTED
+    ========================================
+    */
+
+    socket.onopen = function() {
+
+        setStatus(
+            "Connected — requesting markets...",
+            true
+        );
+
+
+        socket.send(
+            JSON.stringify({
+
+                active_symbols: "brief",
+
+                product_type: "basic"
+
+            })
+        );
+
+    };
+
+
+    /*
+    ========================================
+    MESSAGES
+    ========================================
+    */
+
+    socket.onmessage =
+        function(event) {
+
+            let message;
+
+            try {
+
+                message =
+                    JSON.parse(event.data);
+
+            } catch (error) {
+
+                return;
+
+            }
+
+
+            /*
+            ERROR
+            */
+
+            if (message.error) {
+
+                setStatus(
+                    "Deriv error: " +
+                    message.error.message,
+                    false
+                );
+
+                document.getElementById(
+                    "connectionInfo"
+                ).textContent =
+                    message.error.message;
+
+                return;
+
+            }
+
+
+            /*
+            MARKET LIST
+            */
+
+            if (
+                message.msg_type ===
+                "active_symbols"
+            ) {
+
+                const symbols =
+                    message.active_symbols || [];
+
+
+                /*
+                Find synthetic-style markets.
+
+                IMPORTANT:
+                We only use symbols returned
+                by Deriv.
+                */
+
+                const suitable =
+                    symbols.filter(
+                        item => {
+
+                            const name =
+                                (
+                                    item.display_name ||
+                                    ""
+                                ).toLowerCase();
+
+
+                            return (
+
+                                name.includes(
+                                    "volatility"
+                                )
+
+                                ||
+
+                                name.includes(
+                                    "step"
+                                )
+
+                                ||
+
+                                name.includes(
+                                    "jump"
+                                )
+
+                                ||
+
+                                name.includes(
+                                    "range"
+                                )
+
+                                ||
+
+                                name.includes(
+                                    "drift"
+                                )
+
+                                ||
+
+                                name.includes(
+                                    "boom"
+                                )
+
+                                ||
+
+                                name.includes(
+                                    "crash"
+                                )
+
+                            );
+
+                        }
+                    );
+
+
+                if (!suitable.length) {
+
+                    setStatus(
+                        "No suitable Deriv markets found.",
+                        false
+                    );
+
+                    return;
+
+                }
+
+
+                /*
+                Store markets
+                */
+
+                suitable.forEach(
+                    item => {
+
+                        availableMarkets[
+                            item.symbol
+                        ] =
+                            item.display_name ||
+                            item.symbol;
+
+
+                        tickData[
+                            item.symbol
+                        ] = [];
+
+                    }
+                );
+
+
+                /*
+                Fill dropdown
+                */
+
+                const dropdown =
+                    document.getElementById(
+                        "market"
+                    );
+
+
+                dropdown.innerHTML =
+                    suitable
+                        .map(
+                            item =>
+
+                            `<option value="${item.symbol}">
+                                ${item.display_name || item.symbol}
+                            </option>`
+
+                        )
+                        .join("");
+
+
+                /*
+                Select first valid market
+                */
+
+                selectedMarket =
+                    suitable[0].symbol;
+
+
+                dropdown.value =
+                    selectedMarket;
+
+
+                document.getElementById(
+                    "marketName"
+                ).textContent =
+                    availableMarkets[
+                        selectedMarket
+                    ];
+
+
+                /*
+                Subscribe
+                */
+
+                subscribeToMarkets(
+                    suitable.map(
+                        item =>
+                        item.symbol
+                    )
+                );
+
+            }
+
+
+            /*
+            ========================================
+            LIVE TICK
+            ========================================
+            */
+
+            if (
+                message.msg_type ===
+                "tick"
+            ) {
+
+                const tick =
+                    message.tick;
+
+
+                if (!tick) {
+
+                    return;
+
+                }
+
+
+                const symbol =
+                    tick.symbol;
+
+
+                const digit =
+                    getLastDigit(
+                        tick.quote,
+                        tick.pip_size
+                    );
+
+
+                if (
+                    digit === null
+                ) {
+
+                    return;
+
+                }
+
+
+                if (
+                    !tickData[symbol]
+                ) {
+
+                    tickData[symbol] = [];
+
+                }
+
+
+                tickData[symbol].push(
+                    digit
+                );
+
+
+                /*
+                Keep last 300 ticks
+                */
+
+                if (
+                    tickData[symbol].length >
+                    300
+                ) {
+
+                    tickData[symbol].shift();
+
+                }
+
+
+                /*
+                If this is selected market
+                */
+
+                if (
+                    symbol ===
+                    selectedMarket
+                ) {
+
+                    showDigit(digit);
+
+                    document.getElementById(
+                        "tickCount"
+                    ).textContent =
+                        tickData[
+                            selectedMarket
+                        ].length;
+
+                    displayDigits();
+
+                }
+
+            }
+
+        };
+
+
+    /*
+    ========================================
+    ERROR
+    ========================================
+    */
+
+    socket.onerror =
+        function() {
+
+            setStatus(
+                "WebSocket connection error.",
+                false
+            );
+
+            document.getElementById(
+                "connectionInfo"
+            ).textContent =
+                "Could not connect to Deriv.";
+
+        };
+
+
+    /*
+    ========================================
+    CLOSED
+    ========================================
+    */
+
+    socket.onclose =
+        function() {
+
+            setStatus(
+                "Connection closed.",
+                false
+            );
+
+        };
+
+}
+
+
+/*
+========================================
+SUBSCRIBE TO MARKETS
+========================================
+*/
+
+function subscribeToMarkets(symbols) {
+
+    setStatus(
+        "Live — receiving market ticks...",
+        true
